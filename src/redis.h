@@ -854,7 +854,8 @@ struct redisServer {
     int watchdog_period;  /* Software watchdog period in ms. 0 = off */
     //limited
     int limited ; /* enable the limited feature */
-    size_t set_value_max_length ; /* if limited enabled, the max set value length*/
+    int set_value_max_length ; /* if limited enabled, the max set value length*/
+    int list_max_length ; /* if limited enabled, the max list length*/
 };
 
 typedef struct pubsubPattern {

@@ -1455,7 +1455,9 @@ void initServerConfig(void) {
     server.watchdog_period = 0;
     //limited 
     server.limited = 1; // default not 
-    server.set_value_max_length = 512;
+    server.set_value_max_length = 0;
+    server.list_max_length = 0;
+
 }
 
 /* This function will try to raise the max number of open files accordingly to

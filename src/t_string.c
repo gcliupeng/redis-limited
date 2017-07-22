@@ -66,7 +66,7 @@ void setGenericCommand(redisClient *c, int flags, robj *key, robj *val, robj *ex
     long long milliseconds = 0; /* initialized to avoid any harmness warning */
 
     //limited
-    if(server.limited && val->encoding == REDIS_ENCODING_RAW && sdslen(val->ptr) > server.set_value_max_length){
+    if(server.limited && val->encoding == REDIS_ENCODING_RAW && server.set_value_max_length !=0 && (int)(sdslen(val->ptr)) > server.set_value_max_length){
         addReplyErrorFormat(c,"the value too big, max is set %d",server.set_value_max_length);
         return;
     }

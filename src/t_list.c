@@ -296,8 +296,15 @@ void pushGenericCommand(redisClient *c, int where) {
     int j, waiting = 0, pushed = 0;
     robj *lobj = lookupKeyWrite(c->db,c->argv[1]);
 
+    //limited
+
+    
     if (lobj && lobj->type != REDIS_LIST) {
         addReply(c,shared.wrongtypeerr);
+        return;
+    }
+    if(lobj && server.limited && server.list_max_length!=0 && (int)(listTypeLength(lobj)+c->argc) > server.list_max_length+2){
+        addReplyErrorFormat(c,"the list length too big, max is set %d",server.list_max_length);
         return;
     }
 
