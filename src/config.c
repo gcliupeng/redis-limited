@@ -918,6 +918,10 @@ void configSetCommand(redisClient *c) {
     }else if (!strcasecmp(c->argv[2]->ptr,"list_max_length")) {
         if (getLongLongFromObject(o,&ll) == REDIS_ERR || ll < 0) goto badfmt;
         server.list_max_length = ll;
+    }
+    else if (!strcasecmp(c->argv[2]->ptr,"set_max_length")) {
+        if (getLongLongFromObject(o,&ll) == REDIS_ERR || ll < 0) goto badfmt;
+        server.set_max_length = ll;
     } else {
         addReplyErrorFormat(c,"Unsupported CONFIG parameter: %s",
             (char*)c->argv[2]->ptr);
@@ -1049,6 +1053,7 @@ void configGetCommand(redisClient *c) {
     config_get_bool_field("limited", server.limited);
     config_get_numerical_field("set_value_max_length",server.set_value_max_length);
     config_get_numerical_field("list_max_length",server.list_max_length);
+    config_get_numerical_field("set_max_length",server.set_max_length);
 
     /* Everything we can't handle with macros follows. */
 

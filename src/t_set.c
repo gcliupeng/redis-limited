@@ -262,6 +262,18 @@ void saddCommand(redisClient *c) {
         }
     }
 
+    //limited 
+    int used;
+    if(set->encoding == REDIS_ENCODING_HT){
+        used  = dictSize((dict *)(set->ptr));
+    }else{
+        used = intsetLen(set->ptr);
+    }
+    if(server.limited && server.set_max_length != 0 && used + c->argc > server.set_max_length +2){
+        addReplyErrorFormat(c,"the set length too big, max is set %d",server.set_max_length);
+        return;
+    }
+
     for (j = 2; j < c->argc; j++) {
         c->argv[j] = tryObjectEncoding(c->argv[j]);
         if (setTypeAdd(set,c->argv[j])) added++;

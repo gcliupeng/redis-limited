@@ -344,6 +344,11 @@ void pushxGenericCommand(redisClient *c, robj *refval, robj *val, int where) {
     if ((subject = lookupKeyReadOrReply(c,c->argv[1],shared.czero)) == NULL ||
         checkType(c,subject,REDIS_LIST)) return;
 
+    if(server.limited && server.list_max_length!=0 && (int)listTypeLength(subject) > server.list_max_length){
+        addReplyErrorFormat(c,"the list length too big, max is set %d",server.list_max_length);
+        return;
+    }
+
     if (refval != NULL) {
         /* We're not sure if this value can be inserted yet, but we cannot
          * convert the list inside the iterator. We don't want to loop over

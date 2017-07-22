@@ -1457,6 +1457,7 @@ void initServerConfig(void) {
     server.limited = 1; // default not 
     server.set_value_max_length = 0;
     server.list_max_length = 0;
+    server.set_max_length = 0;
 
 }
 
