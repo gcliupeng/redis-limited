@@ -65,6 +65,12 @@ static int checkStringLength(redisClient *c, long long size) {
 void setGenericCommand(redisClient *c, int flags, robj *key, robj *val, robj *expire, int unit, robj *ok_reply, robj *abort_reply) {
     long long milliseconds = 0; /* initialized to avoid any harmness warning */
 
+    //limited
+    if(server.limited && val->encoding == REDIS_ENCODING_RAW && sdslen(val->ptr) > server.set_value_max_length){
+        addReplyErrorFormat(c,"the value too big, max is set %d",server.set_value_max_length);
+        return;
+    }
+
     if (expire) {
         if (getLongLongFromObjectOrReply(c, expire, &milliseconds, NULL) != REDIS_OK)
             return;

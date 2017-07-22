@@ -1453,6 +1453,9 @@ void initServerConfig(void) {
     server.assert_line = 0;
     server.bug_report_start = 0;
     server.watchdog_period = 0;
+    //limited 
+    server.limited = 1; // default not 
+    server.set_value_max_length = 512;
 }
 
 /* This function will try to raise the max number of open files accordingly to
