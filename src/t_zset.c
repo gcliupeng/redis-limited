@@ -1213,6 +1213,18 @@ void zaddGenericCommand(redisClient *c, int incr) {
         }
     }
 
+    //limited
+    int used ;
+    if(zobj->encoding == REDIS_ENCODING_ZIPLIST){
+        used = ziplistLen(zobj->ptr) / 2;
+    }else{
+        used =  dictSize((dict *) ((zset *) zobj->ptr)->dict);
+    }
+    if(server.limited && server.zset_max_length != 0 && used + elements > server.zset_max_length ){
+        addReplyErrorFormat(c,"the zset length too big, max is set %d",server.zset_max_length);
+        return;
+    }
+
     for (j = 0; j < elements; j++) {
         score = scores[j];
 

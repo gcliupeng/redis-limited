@@ -1458,6 +1458,7 @@ void initServerConfig(void) {
     server.set_value_max_length = 0;
     server.list_max_length = 0;
     server.set_max_length = 0;
+    server.zset_max_length = 0;
 
 }
 

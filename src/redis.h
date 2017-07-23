@@ -857,6 +857,7 @@ struct redisServer {
     int set_value_max_length ; /* if limited enabled, the max set value length*/
     int list_max_length ; /* if limited enabled, the max list length*/
     int set_max_length ; /* if limited enabled, the max set length*/
+    int zset_max_length ; /* if limited enabled, the max zset length*/
 };
 
 typedef struct pubsubPattern {
