@@ -595,6 +595,16 @@ dictType replScriptCacheDictType = {
     NULL                        /* val destructor */
 };
 
+//limited
+dictType dbLimitedDictType = {
+    dictSdsCaseHash,                /* hash function */
+    NULL,                       /* key dup */
+    NULL,                       /* val dup */
+    dictSdsKeyCompare,          /* key compare */
+    dictSdsDestructor,          /* key destructor */
+    NULL,                       /* val destructor */
+};
+
 int htNeedsResize(dict *dict) {
     long long size, used;
 
@@ -1211,7 +1221,6 @@ void beforeSleep(struct aeEventLoop *eventLoop) {
             server.current_client = NULL;
         }
     }
-
     /* Write the AOF buffer on disk */
     flushAppendOnlyFile(0);
 }
@@ -1458,7 +1467,9 @@ void initServerConfig(void) {
     server.set_value_max_length = 0;
     server.list_max_length = 0;
     server.set_max_length = 0;
-    server.zset_max_length = 0;
+    server.zset_max_length = 0; 
+    server.transport_limited = 0;
+    server.transport_limited_cmds = dictCreate(&dbLimitedDictType,NULL);
 
 }
 

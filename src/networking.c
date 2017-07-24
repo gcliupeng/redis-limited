@@ -765,10 +765,28 @@ void sendReplyToClient(aeEventLoop *el, int fd, void *privdata, int mask) {
     robj *o;
     REDIS_NOTUSED(el);
     REDIS_NOTUSED(mask);
+    int limited =0;
 
     while(c->bufpos > 0 || listLength(c->reply)) {
         if (c->bufpos > 0) {
-            nwritten = write(fd,c->buf+c->sentlen,c->bufpos-c->sentlen);
+            // transport-limited        
+            if(server.transport_limited && c->lastcmd ){
+                sds tmp = sdsnew(c->lastcmd->name);
+                if(dictFind((dict *)server.transport_limited_cmds, tmp)){
+                    if(c->bufpos-c->sentlen > server.transport_limited - totwritten){
+                        limited = server.transport_limited - totwritten;
+                    }else{
+                        limited = c->bufpos-c->sentlen;
+                    }
+                }else{
+                    limited = c->bufpos-c->sentlen;
+                }
+             sdsfree(tmp);   
+            }else{
+                limited = c->bufpos-c->sentlen;
+            }
+            if(limited <= 0 ) break;
+            nwritten = write(fd,c->buf+c->sentlen,limited);
             if (nwritten <= 0) break;
             c->sentlen += nwritten;
             totwritten += nwritten;
@@ -788,8 +806,17 @@ void sendReplyToClient(aeEventLoop *el, int fd, void *privdata, int mask) {
                 listDelNode(c->reply,listFirst(c->reply));
                 continue;
             }
-
-            nwritten = write(fd, ((char*)o->ptr)+c->sentlen,objlen-c->sentlen);
+            // transport-limited
+            if(server.transport_limited){
+                if(objlen-c->sentlen > server.transport_limited - totwritten)
+                    limited = server.transport_limited - totwritten;
+                else
+                    limited = objlen-c->sentlen;
+            }else{
+                limited = objlen-c->sentlen;
+            }
+            if(limited <= 0 ) break;
+            nwritten = write(fd, ((char*)o->ptr)+c->sentlen,limited);
             if (nwritten <= 0) break;
             c->sentlen += nwritten;
             totwritten += nwritten;

@@ -506,8 +506,16 @@ void loadServerConfigFromString(char *config) {
             if ((server.limited = yesnotoi(argv[1])) == -1) {
                 err = "argument must be 'yes' or 'no'"; goto loaderr;
             }
-        }
-            else {
+        }else if (!strcasecmp(argv[0],"transport_limited_cmds") && argc >= 2) {
+            int j, cmds = argc-1;
+
+            for (j = 0; j < cmds; j++){
+                struct redisCommand *c = dictFetchValue(server.commands, argv[j+1]);
+                if(!c){
+                    dictAdd(server.transport_limited_cmds, sdsnew(argv[j+1]), NULL);
+                    }
+                }
+        }else {
             err = "Bad directive or wrong number of arguments"; goto loaderr;
         }
         sdsfreesplitres(argv,argc);
@@ -925,6 +933,22 @@ void configSetCommand(redisClient *c) {
     } else if (!strcasecmp(c->argv[2]->ptr,"zset_max_length")) {
         if (getLongLongFromObject(o,&ll) == REDIS_ERR || ll < 0) goto badfmt;
         server.zset_max_length = ll;
+    }else if (!strcasecmp(c->argv[2]->ptr,"transport_limited")) {
+        if (getLongLongFromObject(o,&ll) == REDIS_ERR || ll < 0) goto badfmt;
+        server.transport_limited = ll;
+    }else if (!strcasecmp(c->argv[2]->ptr,"transport_limited_cmds")) {
+        int vlen, j;
+        sds *v = sdssplitlen(o->ptr,sdslen(o->ptr)," ",1,&vlen);
+        dictEmpty(server.transport_limited_cmds,NULL);
+        for (j = 0; j < vlen; ++j)
+        {
+            struct redisCommand *c = dictFetchValue(server.commands, v[j]);
+            if(c){
+                dictAdd(server.transport_limited_cmds,sdsnew(v[j]), NULL);
+            }
+        }
+        if(dictSize((dict *)server.transport_limited_cmds) == 0 )goto badfmt;
+        sdsfreesplitres(v,vlen);
     }else {
         addReplyErrorFormat(c,"Unsupported CONFIG parameter: %s",
             (char*)c->argv[2]->ptr);
@@ -1058,8 +1082,32 @@ void configGetCommand(redisClient *c) {
     config_get_numerical_field("list_max_length",server.list_max_length);
     config_get_numerical_field("set_max_length",server.set_max_length);
     config_get_numerical_field("zset_max_length",server.zset_max_length);
+    config_get_numerical_field("transport_limited",server.transport_limited);
+    
 
     /* Everything we can't handle with macros follows. */
+
+    if (stringmatch(pattern,"transport_limited_cmds",0)) {
+        if(dictSize((dict *)server.transport_limited_cmds) == 0){
+            addReplyBulkCString(c,"transport_limited_cmds");
+            addReplyBulkCString(c,"no cmd");   
+        }else{
+            dictIterator *iter = dictGetIterator((dict *)server.transport_limited_cmds);
+            dictEntry * entry = dictNext(iter);
+            sds reply = sdsempty();
+            addReplyBulkCString(c,"transport_limited_cmds");
+            while(entry){
+                    reply = sdscat(reply,dictGetKey(entry));
+                    reply = sdscat(reply," ");
+                    entry = dictNext(iter);
+            }
+            sdsIncrLen(reply,-1);
+            addReplyBulkCString(c, reply);
+            sdsfree(reply);
+            dictReleaseIterator(iter);
+        }
+        matches++;
+    }
 
     if (stringmatch(pattern,"appendonly",0)) {
         addReplyBulkCString(c,"appendonly");
