@@ -40,4 +40,11 @@ redis-limit同时具有输出限流功能。由于redis的单进程单线程结�
 语法：config set transport_limited_cmds "smembers zrange" 设置smembers、zrange命令需要限流；默认没有命令需要限流。
 
 
+安装方式：
+========================================
+跟redis一样：configure 、 make 、make  install
+
+性能测试：
+todo
+
 
