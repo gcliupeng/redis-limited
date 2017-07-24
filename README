@@ -5,8 +5,7 @@ redis-limited以redis-2.8为基础，主要是增加了一些使用约束。redi
 多的数据，可能会导致smembers命令消耗大量io，影响redis的服务。redis-limit具备以下几个约束：
 设置redis-limit约束功能是否开启
 ------------------
-在配置文件和通过config set 命令中，可以设置limited约束功能是否开启的·总开关·。如果此配置为0，表示各种约束功能关闭，现在redis-limit
-跟redis-2.8无异。
+在配置文件和通过config set 命令中，可以设置limited约束功能是否开启的·总开关·。如果此配置为0，表示各种约束功能关闭。
 语法： config set limited yes 开启； config set limited no 关闭(默认)。
 
 设置set、setx、setnx等命令所设置的value最大长度
