@@ -1,30 +1,43 @@
 具有多种使用规范的redis
-===
-redis-limited以redis-2.8为基础，主要是增加了一些使用约束。redis本身作为一个基于内存的存储引擎，约束条件较少，如果没有超过最大使用内存，<br>
-集合、列表的大小可以无限大。但是平时我们多将redis作为网络（api）接口的缓存，在这种情况下，应该对redis进行更多的约束，比如如果在set中存储过<br>
-多的数据，可能会导致smembers命令消耗大量io，影响redis的服务。redis-limit具备以下几个约束：<br>
+==============
+redis-limited以redis-2.8为基础，主要是增加了一些使用约束。redis本身作为一个基于内存的存储引擎，约束条件较少，如果没有超过最大使用内存，
+集合、列表的大小可以无限大。但是平时我们多将redis作为网络（api）接口的缓存，在这种情况下，应该对redis进行更多的约束，比如如果在set中存储过
+多的数据，可能会导致smembers命令消耗大量io，影响redis的服务。redis-limit具备以下几个约束：
 设置redis-limit约束功能是否开启
----
-在配置文件和通过config set 命令中，可以设置limited约束功能是否开启的·总开关·。如果此配置为0，表示各种约束功能关闭，现在redis-limit<br>
-跟redis-2.8无异。<br>
-语法： config set limited yes 开启； config set limited no 关闭(默认)。<br>
+------------------
+在配置文件和通过config set 命令中，可以设置limited约束功能是否开启的·总开关·。如果此配置为0，表示各种约束功能关闭，现在redis-limit
+跟redis-2.8无异。
+语法： config set limited yes 开启； config set limited no 关闭(默认)。
 
 设置set、setx、setnx等命令所设置的value最大长度
----
-通过此配置，可以设置某一个key-value中value的最大长度，避免超大value使用</br>
-语法：config set set_value_max_length 0 无限制(默认)； config set set_value_max_length xxx 最大value xxx个字节。<br>
+------------------
+通过此配置，可以设置某一个key-value中value的最大长度，避免超大value使用
+语法：config set set_value_max_length 0 无限制(默认)； config set set_value_max_length xxx 最大value xxx个字节。
 
 设置队列的最大长度
----
-语法：config set list_max_length 0 无限制(默认)； config set list_max_length xxx 最大xxx个元素。<br>
+------------------
+语法：config set list_max_length 0 无限制(默认)； config set list_max_length xxx 最大xxx个元素。
 
 设置集合的最大个数
----
-语法：config set set_max_length 0 无限制(默认)； config set set_max_length xxx 最大xxx个元素。<br>
+------------------
+语法：config set set_max_length 0 无限制(默认)； config set set_max_length xxx 最大xxx个元素。
 
 设置有序集合的最大长度
----
-语法：config set zset_max_length 0 无限制(默认)； config set zset_max_length xxx 最大xxx个元素。<br>
+------------------
+语法：config set zset_max_length 0 无限制(默认)； config set zset_max_length xxx 最大xxx个元素。
+
+
+设置限流功能
+==============
+redis-limit同时具有输出限流功能。由于redis的单进程单线程结构，对于某些命令，比如smembers，如果返回数据过大的话，一次返回所有数据可能会导致
+其他需要处理的命令等待较长的时间。redis-limit可以设置某些命令·一次·输出的字节数，防止某些命令一直得不得处理。
+设置限流功能是否开启
+语法： config set transport_limited 0 关闭（默认）； config set transport_limited xx 一次传送xx个字节，剩余的数据在下次epoll_wait后继续处理。
+
+设置需要限流功能的命令
+------------------
+上面的transport_limited仅设置限流是否开启，开启后还需要设置对于哪些命令进行限流（主要是一些返回数据较大的命令）
+语法：config set transport_limited_cmds "smembers zrange" 设置smembers、zrange命令需要限流；默认没有命令需要限流。
 
 
 
