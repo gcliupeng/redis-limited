@@ -44,6 +44,68 @@ redis-limit同时具有输出限流功能。由于redis的单进程单线程结�
 跟redis一样：configure 、 make 、make  install
 
 性能测试：
-todo
+（1）首先redis中有两个key：mylist是一个list，里面有10000条数据；testk是字符串，值为testv。
+（2）单独测试get命令：redis-benchmark -n 10000 get testk。结果如下：
+            ====== get testk ======
+       10000 requests completed in 0.11 seconds
+       50 parallel clients
+       3 bytes payload
+       keep alive: 1
+
+       100.00% <= 0 milliseconds
+       94339.62 requests per second
+（3）在一个客户端一直执行lrang mylist 0 -1 的情况下，再次测试get命令性能：redis-benchmark -c 1 -r 10000 lrange mylist 0 -1（另一个命令行运行），redis-benchmark -n 10000 get testk（另一个命令行运行），结果如下：
+          ====== get testk ======
+      10000 requests completed in 0.42 seconds
+      50 parallel clients
+      3 bytes payload
+      keep alive: 1
+
+     4.39% <= 1 milliseconds
+     54.33% <= 2 milliseconds
+     100.00% <= 3 milliseconds
+     23980.82 requests per second
+可见在lrang 命令下，其他命令的吞吐率会下降。
+（3）运行config set transport_limited 10000 和 config set transport_limited_cmds lrange命令。然后重复2中的测试，结果如下：
+       ====== get testk ======
+     10000 requests completed in 0.19 seconds
+     50 parallel clients
+     3 bytes payload
+     keep alive: 1
+ 
+    83.46% <= 1 milliseconds
+    98.61% <= 2 milliseconds
+    100.00% <= 2 milliseconds
+    51282.05 requests per second
+可见，通过对某一命令（lrange）进行限速，可以减小它对其他命令的影响。更改transport_limited的值，可以看到不同的结果（redis默认一次epoll循环发送64kb数据，通过本命令，可以自定义不同命令不同的发送大小）。
+
+transport_limited=1000时的结果：
+====== get testk ======
+  10000 requests completed in 0.12 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+97.22% <= 1 milliseconds
+99.05% <= 2 milliseconds
+100.00% <= 2 milliseconds
+83333.34 requests per second
+
+
+transport_limited=100时的结果：
+
+
+====== get testk ======
+  10000 requests completed in 0.11 seconds
+  50 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+98.87% <= 1 milliseconds
+99.76% <= 2 milliseconds
+100.00% <= 2 milliseconds
+90090.09 requests per second
+
+
 
 
